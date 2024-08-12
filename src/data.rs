@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use crate::{params::sigmoid, Params, S};
 
-pub const NUM_PARAMS: usize = 384 + 8 + 8;
+pub const NUM_PARAMS: usize = 384 + 8 + 8 + 8;
 pub const TPHASE: f64 = 24.0;
 
 #[derive(Default)]
@@ -105,6 +105,11 @@ impl FromStr for DataPoint {
                         }
                     }
 
+                    // pawns
+                    if piece == 0 && RAILS[usize::from(sq) % 8] & bbs[side][0] == 0 {
+                        pos.active[side].push(384 + 16 + (fsq % 8));
+                    }
+
                     bb &= bb - 1;
                 }
             }
@@ -125,3 +130,22 @@ impl FromStr for DataPoint {
         Ok(pos)
     }
 }
+
+const RAILS: [u64; 8] = {
+    let mut res = [0; 8];
+
+    let mut i = 0;
+    while i < 8 {
+        if i > 0 {
+            res[i] |= 0x101010101010101 << (i - 1);
+        }
+
+        if i < 7 {
+            res[i] |= 0x101010101010101 << (i + 1);
+        }
+
+        i += 1;
+    }
+
+    res
+};

@@ -69,6 +69,8 @@ impl Tuner {
         print_simple_table("ROOK_SEMI_OPEN_FILE", 8, 384);
 
         print_simple_table("ROOK_FULL_OPEN_FILE", 8, 384 + 8);
+
+        print_simple_table("ISOLATED_PAWN_FILE", 8, 384 + 16);
     }
 
     pub fn seed_weights(&mut self) {
