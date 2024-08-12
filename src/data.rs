@@ -47,6 +47,8 @@ impl FromStr for DataPoint {
         let mut in_stm = false;
         let mut stm = false;
 
+        let mut kings = [0, 0];
+
         for ch in fen.chars() {
             if ch == '/' {
                 row -= 1;
@@ -64,10 +66,25 @@ impl FromStr for DataPoint {
                 let sq = 8 * row + col;
                 let flip = 56 * (c ^ 1) as u16;
 
+                if pc == 5 {
+                    kings[c] = sq;
+                }
+
                 pos.active[c].push(pc * 64 + (sq ^ flip));
                 pos.phase += [0., 1., 1., 2., 4., 0.][pc as usize];
 
                 col += 1;
+            }
+        }
+
+        // horizontal mirror
+        for i in [0, 1] {
+            if kings[i] % 8 > 3 {
+                for feat in pos.active[i].iter_mut() {
+                    let sq = *feat % 64;
+                    *feat -= sq;
+                    *feat += sq ^ 7;
+                }
             }
         }
 
