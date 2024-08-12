@@ -40,12 +40,22 @@ impl FromStr for DataPoint {
         let mut row = 7;
         let mut col = 0;
 
-        for ch in s.chars() {
+        let mut parts = s.split(" ce ");
+        let fen = parts.next().unwrap();
+        let score = parts.next().unwrap();
+
+        let mut in_stm = false;
+        let mut stm = false;
+
+        for ch in fen.chars() {
             if ch == '/' {
                 row -= 1;
                 col = 0;
-            } else if ch == ' ' {
+            } else if in_stm {
+                stm = ch == 'b';
                 break;
+            } else if ch == ' ' {
+                in_stm = true;
             } else if ('1'..='8').contains(&ch) {
                 col += ch.to_digit(10).expect("hard coded") as u16;
             } else if let Some(idx) = CHARS.iter().position(|&element| element == ch) {
@@ -67,11 +77,11 @@ impl FromStr for DataPoint {
 
         pos.phase /= TPHASE;
 
-        pos.result = match &s[(s.len() - 6)..] {
-            "\"1-0\";" | " [1.0]" => 1.0,
-            "\"0-1\";" | " [0.0]" => 0.0,
-            _ => 0.5,
-        };
+        pos.result = score.parse().unwrap();
+
+        if stm {
+            pos.result = 1.0 - pos.result;
+        }
 
         Ok(pos)
     }

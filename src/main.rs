@@ -16,7 +16,7 @@ fn main() {
     let mut tuner = Tuner::new(THREADS);
 
     tuner.seed_weights();
-    tuner.add_data("zurichess.epd");
+    tuner.add_data("gedas_filtered_sf_d9.epd");
 
     let k = tuner.optimise_k();
 
