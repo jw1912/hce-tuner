@@ -27,7 +27,7 @@ impl Tuner {
     pub fn print_weights(&self) {
         println!();
 
-        println!("const RAW_PST: [[S; 64]; 8] = [[S(0, 0); 64], [S(0, 0); 64],");
+        println!("static PST: [[S; 64]; 8] = [[S(0, 0); 64], [S(0, 0); 64],");
         for pc in 0..6 {
             println!("[");
 
@@ -51,19 +51,24 @@ impl Tuner {
 
         println!("];");
 
-        println!();
+        let print_simple_table = |name, size, start: u16| {
+            println!();
+            print!("const {name}: [S; {size}] = [");
 
-        print!("const ROOK_FRIENDLY_OPEN_FILE: [S; 8] = [");
+            for file in 0..size {
+                print!("{:?}", self.weights[start + file]);
 
-        for file in 0..8 {
-            print!("{:?}", self.weights[384 + file]);
-
-            if file != 7 {
-                print!(", ");
+                if file != size - 1 {
+                    print!(", ");
+                }
             }
-        }
 
-        println!("];");
+            println!("];");
+        };
+
+        print_simple_table("ROOK_SEMI_OPEN_FILE", 8, 384);
+
+        print_simple_table("ROOK_FULL_OPEN_FILE", 8, 384 + 8);
     }
 
     pub fn seed_weights(&mut self) {
