@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use crate::{params::sigmoid, Params, S};
 
-pub const NUM_PARAMS: usize = 384 + 8 + 8 + 8;
+pub const NUM_PARAMS: usize = 384 + 8 * 4;
 pub const TPHASE: f64 = 24.0;
 
 #[derive(Default)]
@@ -100,14 +100,20 @@ impl FromStr for DataPoint {
                             pos.active[side].push(384 + (fsq % 8));
                         }
 
-                        if file & (bbs[side ^ 1][0] | bbs[side][0]) == 0 {
+                        if file & (bbs[0][0] | bbs[1][0]) == 0 {
                             pos.active[side].push(384 + 8 + (fsq % 8));
                         }
                     }
 
                     // pawns
-                    if piece == 0 && RAILS[usize::from(sq) % 8] & bbs[side][0] == 0 {
-                        pos.active[side].push(384 + 16 + (fsq % 8));
+                    if piece == 0 {
+                        if RAILS[usize::from(sq) % 8] & bbs[side][0] == 0 {
+                            pos.active[side].push(384 + 16 + (fsq % 8));
+                        }
+
+                        if SPANS[side][usize::from(sq)] & bbs[side ^ 1][0] == 0 {
+                            pos.active[side].push(384 + 24 + (fsq % 8));
+                        }
                     }
 
                     bb &= bb - 1;
@@ -149,3 +155,39 @@ const RAILS: [u64; 8] = {
 
     res
 };
+
+const FRONT_SPANS: [u64; 64] = {
+    let mut res = [0; 64];
+
+    let mut i = 0;
+    while i < 64 {
+        let mut bb = (1 << i) << 8;
+        bb |= bb << 8;
+        bb |= bb << 16;
+        bb |= bb << 32;
+        bb |= (bb & !(0x101010101010101 << 7)) << 1 | (bb & !0x101010101010101) >> 1;
+
+        res[i] = bb;
+
+        i += 1;
+    }
+    
+    res
+};
+
+const SPANS: [[u64; 64]; 2] = [
+    FRONT_SPANS,
+    {
+        let mut res = [0; 64];
+
+        let mut i = 0;
+        while i < 64 {
+            res[i] = FRONT_SPANS[i ^ 56].swap_bytes();
+    
+            i += 1;
+        }
+        
+        res
+        
+    }
+];
