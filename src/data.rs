@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use crate::{params::sigmoid, Params, S};
 
-pub const NUM_PARAMS: usize = 384;
+pub const NUM_PARAMS: usize = 384 + 8;
 pub const TPHASE: f64 = 24.0;
 
 #[derive(Default)]
@@ -88,8 +88,14 @@ impl FromStr for DataPoint {
 
                 while bb > 0 {
                     let sq = bb.trailing_zeros() as u16;
+                    let fsq = sq ^ flip;
 
-                    pos.active[side].push(64 * piece as u16 + (sq ^ flip));
+                    pos.active[side].push(64 * piece as u16 + fsq);
+
+                    // rooks
+                    if piece == 3 && (0x101010101010101 << (sq % 8)) & bbs[side][0] == 0 {
+                        pos.active[side].push(384 + (fsq % 8));
+                    }
 
                     bb &= bb - 1;
                 }

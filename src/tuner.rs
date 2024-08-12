@@ -25,6 +25,9 @@ impl Tuner {
     }
 
     pub fn print_weights(&self) {
+        println!();
+
+        println!("const RAW_PST: [[S; 64]; 8] = [[S(0, 0); 64], [S(0, 0); 64],");
         for pc in 0..6 {
             println!("[");
 
@@ -43,6 +46,24 @@ impl Tuner {
 
             print!("    ], ");
         }
+
+        println!();
+
+        println!("];");
+
+        println!();
+
+        print!("const ROOK_FRIENDLY_OPEN_FILE: [S; 8] = [");
+
+        for file in 0..8 {
+            print!("{:?}", self.weights[384 + file]);
+
+            if file != 7 {
+                print!(", ");
+            }
+        }
+
+        println!("];");
     }
 
     pub fn seed_weights(&mut self) {
