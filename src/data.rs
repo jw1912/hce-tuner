@@ -47,7 +47,8 @@ impl FromStr for DataPoint {
         let mut in_stm = false;
         let mut stm = false;
 
-        let mut kings = [0, 0];
+        let mut occ = [0; 2];
+        let mut bbs = [[0; 6]; 2];
 
         for ch in fen.chars() {
             if ch == '/' {
@@ -64,26 +65,33 @@ impl FromStr for DataPoint {
                 let c = idx / 6;
                 let pc = idx as u16 - 6 * c as u16;
                 let sq = 8 * row + col;
-                let flip = 56 * (c ^ 1) as u16;
 
-                if pc == 5 {
-                    kings[c] = sq;
-                }
+                let bit = 1u64 << sq;
+                bbs[c][usize::from(pc)] |= bit;
+                occ[c] |= bit;
 
-                pos.active[c].push(pc * 64 + (sq ^ flip));
                 pos.phase += [0., 1., 1., 2., 4., 0.][pc as usize];
 
                 col += 1;
             }
         }
 
-        // horizontal mirror
-        for i in [0, 1] {
-            if kings[i] % 8 > 3 {
-                for feat in pos.active[i].iter_mut() {
-                    let sq = *feat % 64;
-                    *feat -= sq;
-                    *feat += sq ^ 7;
+        for side in [0, 1] {
+            let ksq = bbs[side][5].trailing_zeros();
+
+            let cflip = if side == 0 { 56 } else { 0 };
+            let kflip = if ksq % 8 > 3 { 7 } else { 0 };
+            let flip = cflip ^ kflip;
+
+            for piece in 0..6 {
+                let mut bb = bbs[side][piece];
+
+                while bb > 0 {
+                    let sq = bb.trailing_zeros() as u16;
+
+                    pos.active[side].push(64 * piece as u16 + (sq ^ flip));
+
+                    bb &= bb - 1;
                 }
             }
         }
