@@ -2,8 +2,17 @@ use std::str::FromStr;
 
 use crate::{params::sigmoid, Params, S};
 
-pub const NUM_PARAMS: usize = 384 + 8 * 3 + 64;
+pub const NUM_PARAMS: usize = 384 + 8 * 3 + 64 + 1;
 pub const TPHASE: f64 = 24.0;
+
+pub struct Offset;
+impl Offset {
+    pub const PST: u16 = 0;
+    pub const SEMI_OPEN: u16 = Self::PST + 384;
+    pub const FULL_OPEN: u16 = Self::SEMI_OPEN + 8;
+    pub const ISOLATED: u16 = Self::FULL_OPEN + 8;
+    pub const PASSED: u16 = Self::ISOLATED + 8;
+}
 
 #[derive(Default)]
 pub struct DataPoint {
@@ -90,29 +99,29 @@ impl FromStr for DataPoint {
                     let sq = bb.trailing_zeros() as u16;
                     let fsq = sq ^ flip;
 
-                    pos.active[side].push(64 * piece as u16 + fsq);
+                    pos.active[side].push(Offset::PST + 64 * piece as u16 + fsq);
 
                     // rooks
                     if piece == 3 {
                         let file = 0x101010101010101 << (sq % 8);
 
                         if file & bbs[side][0] == 0 {
-                            pos.active[side].push(384 + (fsq % 8));
+                            pos.active[side].push(Offset::SEMI_OPEN + (fsq % 8));
                         }
 
                         if file & (bbs[0][0] | bbs[1][0]) == 0 {
-                            pos.active[side].push(384 + 8 + (fsq % 8));
+                            pos.active[side].push(Offset::FULL_OPEN + (fsq % 8));
                         }
                     }
 
                     // pawns
                     if piece == 0 {
                         if RAILS[usize::from(sq) % 8] & bbs[side][0] == 0 {
-                            pos.active[side].push(384 + 16 + (fsq % 8));
+                            pos.active[side].push(Offset::ISOLATED + (fsq % 8));
                         }
 
                         if SPANS[side][usize::from(sq)] & bbs[side ^ 1][0] == 0 {
-                            pos.active[side].push(384 + 24 + fsq);
+                            pos.active[side].push(Offset::PASSED + fsq);
                         }
                     }
 

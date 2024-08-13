@@ -3,7 +3,7 @@ use std::{
     io::{BufRead, BufReader},
 };
 
-use crate::{data::NUM_PARAMS, DataPoint, Params, S};
+use crate::{data::{Offset, NUM_PARAMS}, DataPoint, Params, S};
 
 pub struct Tuner {
     data: Vec<DataPoint>,
@@ -27,13 +27,13 @@ impl Tuner {
     pub fn print_weights(&self) {
         println!();
 
-        let print_pst = |start: u16, tabs| {
-            for rank in 0..8 {
+        let print_pst = |start: u16, tabs, cols, rows| {
+            for rank in 0..rows {
                 print!("{tabs}");
-                for file in 0..8 {
-                    let idx = start + 8 * rank + file;
+                for file in 0..cols {
+                    let idx = start + cols * rank + file;
                     print!("{:?},", self.weights[idx]);
-                    if file != 7 {
+                    if file != cols - 1 {
                         print!(" ");
                     }
                 }
@@ -45,7 +45,7 @@ impl Tuner {
         println!("static PST: [[S; 64]; 8] = [[S(0, 0); 64], [S(0, 0); 64],");
         for pc in 0..6 {
             println!("[");
-            print_pst(64 * pc, "        ");
+            print_pst(Offset::PST + 64 * pc, "        ", 8, 8);
             print!("    ], ");
         }
 
@@ -68,15 +68,17 @@ impl Tuner {
             println!("];");
         };
 
-        print_simple_table("ROOK_SEMI_OPEN_FILE", 8, 384);
+        print_simple_table("ROOK_SEMI_OPEN_FILE", 8, Offset::SEMI_OPEN);
 
-        print_simple_table("ROOK_FULL_OPEN_FILE", 8, 384 + 8);
+        print_simple_table("ROOK_FULL_OPEN_FILE", 8, Offset::FULL_OPEN);
 
-        print_simple_table("ISOLATED_PAWN_FILE", 8, 384 + 16);
+        print_simple_table("ISOLATED_PAWN_FILE", 8, Offset::ISOLATED);
+
+        println!();
 
         println!("static PASSED_PAWN_PST: [S; 64] = [");
-        print_pst(384 + 24, "    ");
-        println!("];")
+        print_pst(Offset::PASSED, "    ", 8, 8);
+        println!("];");
     }
 
     pub fn seed_weights(&mut self) {
