@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use crate::{params::sigmoid, Params, S};
 
-pub const NUM_PARAMS: usize = 384 + 8 * 4;
+pub const NUM_PARAMS: usize = 384 + 8 * 3 + 64;
 pub const TPHASE: f64 = 24.0;
 
 #[derive(Default)]
@@ -112,7 +112,7 @@ impl FromStr for DataPoint {
                         }
 
                         if SPANS[side][usize::from(sq)] & bbs[side ^ 1][0] == 0 {
-                            pos.active[side].push(384 + 24 + (fsq % 8));
+                            pos.active[side].push(384 + 24 + fsq);
                         }
                     }
 

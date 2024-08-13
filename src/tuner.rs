@@ -27,14 +27,11 @@ impl Tuner {
     pub fn print_weights(&self) {
         println!();
 
-        println!("static PST: [[S; 64]; 8] = [[S(0, 0); 64], [S(0, 0); 64],");
-        for pc in 0..6 {
-            println!("[");
-
+        let print_pst = |start: u16, tabs| {
             for rank in 0..8 {
-                print!("        ");
+                print!("{tabs}");
                 for file in 0..8 {
-                    let idx = 64 * pc + 8 * rank + file;
+                    let idx = start + 8 * rank + file;
                     print!("{:?},", self.weights[idx]);
                     if file != 7 {
                         print!(" ");
@@ -43,7 +40,12 @@ impl Tuner {
 
                 println!();
             }
+        };
 
+        println!("static PST: [[S; 64]; 8] = [[S(0, 0); 64], [S(0, 0); 64],");
+        for pc in 0..6 {
+            println!("[");
+            print_pst(64 * pc, "        ");
             print!("    ], ");
         }
 
@@ -72,7 +74,9 @@ impl Tuner {
 
         print_simple_table("ISOLATED_PAWN_FILE", 8, 384 + 16);
 
-        print_simple_table("PASSED_PAWN_FILE", 8, 384 + 24);
+        println!("static PASSED_PAWN_PST: [S; 64] = [");
+        print_pst(384 + 24, "    ");
+        println!("];")
     }
 
     pub fn seed_weights(&mut self) {
