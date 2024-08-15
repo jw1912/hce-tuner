@@ -24,6 +24,10 @@ impl Tuner {
         }
     }
 
+    pub fn num_data_points(&self) -> usize {
+        self.data.len()
+    }
+
     pub fn print_weights(&self) {
         println!();
 
@@ -149,12 +153,12 @@ impl Tuner {
             let right = self.error(k + delta);
             let left = self.error(k - delta);
             dev = (right - left) / (5000. * delta);
-            println!("k {k:.4} decr {left:.5} incr {right:.5}");
             k -= dev;
-        }
 
-        let error = self.error(k);
-        println!("k {k:.6} error {error:.5}");
+            if k <= 0.0 {
+                println!("k {k:.4} decr {left:.5} incr {right:.5}");
+            }
+        }
 
         k
     }

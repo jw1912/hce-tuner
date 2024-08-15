@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use crate::{params::sigmoid, Params, S};
 
-pub const NUM_PARAMS: usize = 384 + 8 * 3 + 64 + 1;
+pub const NUM_PARAMS: usize = Offset::PASSED as usize + 64;
 pub const TPHASE: f64 = 24.0;
 
 pub struct Offset;
