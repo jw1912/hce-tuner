@@ -1,3 +1,4 @@
+mod attacks;
 mod data;
 mod params;
 mod score;

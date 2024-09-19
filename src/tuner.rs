@@ -83,6 +83,30 @@ impl Tuner {
         println!("static PASSED_PAWN_PST: [S; 64] = [");
         print_pst(Offset::PASSED, "    ", 8, 8);
         println!("];");
+
+        println!();
+
+        println!("static KNIGHT_MOBILITY: [S; 9] = [");
+        print_pst(Offset::KNIGHT_MOBILITY, "    ", 3, 3);
+        println!("];");
+
+        println!();
+
+        println!("static BISHOP_MOBILITY: [S; 14] = [");
+        print_pst(Offset::BISHOP_MOBILITY, "    ", 7, 2);
+        println!("];");
+
+        println!();
+
+        println!("static ROOK_MOBILITY: [S; 15] = [");
+        print_pst(Offset::ROOK_MOBILITY, "    ", 5, 3);
+        println!("];");
+
+        println!();
+
+        println!("static QUEEN_MOBILITY: [S; 28] = [");
+        print_pst(Offset::QUEEN_MOBILITY, "    ", 7, 4);
+        println!("];");
     }
 
     pub fn seed_weights(&mut self) {

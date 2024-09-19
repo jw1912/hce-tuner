@@ -1,8 +1,8 @@
 use std::str::FromStr;
 
-use crate::{params::sigmoid, Params, S};
+use crate::{attacks::Attacks, params::sigmoid, Params, S};
 
-pub const NUM_PARAMS: usize = Offset::PASSED as usize + 64;
+pub const NUM_PARAMS: usize = Offset::QUEEN_MOBILITY as usize + 28;
 pub const TPHASE: f64 = 24.0;
 
 pub struct Offset;
@@ -12,6 +12,10 @@ impl Offset {
     pub const FULL_OPEN: u16 = Self::SEMI_OPEN + 8;
     pub const ISOLATED: u16 = Self::FULL_OPEN + 8;
     pub const PASSED: u16 = Self::ISOLATED + 8;
+    pub const KNIGHT_MOBILITY: u16 = Self::PASSED + 64;
+    pub const BISHOP_MOBILITY: u16 = Self::KNIGHT_MOBILITY + 9;
+    pub const ROOK_MOBILITY: u16 = Self::BISHOP_MOBILITY + 14;
+    pub const QUEEN_MOBILITY: u16 = Self::ROOK_MOBILITY + 15;
 }
 
 #[derive(Default)]
@@ -92,6 +96,16 @@ impl FromStr for DataPoint {
             let kflip = if ksq % 8 > 3 { 7 } else { 0 };
             let flip = cflip ^ kflip;
 
+            let pawn_threats = if side == 0 {
+                Attacks::black_pawn_setwise(bbs[1][0])
+            } else {
+                Attacks::white_pawn_setwise(bbs[0][0])
+            };
+
+            let safe = !pawn_threats;
+
+            let total_occupancy = occ[0] ^ occ[1];
+
             for piece in 0..6 {
                 let mut bb = bbs[side][piece];
 
@@ -101,28 +115,43 @@ impl FromStr for DataPoint {
 
                     pos.active[side].push(Offset::PST + 64 * piece as u16 + fsq);
 
-                    // rooks
-                    if piece == 3 {
-                        let file = 0x101010101010101 << (sq % 8);
-
-                        if file & bbs[side][0] == 0 {
-                            pos.active[side].push(Offset::SEMI_OPEN + (fsq % 8));
+                    match piece {
+                        0 => {
+                            if RAILS[usize::from(sq) % 8] & bbs[side][0] == 0 {
+                                pos.active[side].push(Offset::ISOLATED + (fsq % 8));
+                            }
+                        
+                            if SPANS[side][usize::from(sq)] & bbs[side ^ 1][0] == 0 {
+                                pos.active[side].push(Offset::PASSED + fsq);
+                            }
                         }
-
-                        if file & (bbs[0][0] | bbs[1][0]) == 0 {
-                            pos.active[side].push(Offset::FULL_OPEN + (fsq % 8));
+                        1 => {
+                            let attacks = (Attacks::knight(usize::from(sq)) & safe).count_ones();
+                            pos.active[side].push(Offset::KNIGHT_MOBILITY + attacks as u16);
                         }
-                    }
-
-                    // pawns
-                    if piece == 0 {
-                        if RAILS[usize::from(sq) % 8] & bbs[side][0] == 0 {
-                            pos.active[side].push(Offset::ISOLATED + (fsq % 8));
+                        2 => {
+                            let attacks = (Attacks::bishop(usize::from(sq), total_occupancy) & safe).count_ones();
+                            pos.active[side].push(Offset::BISHOP_MOBILITY + attacks as u16);
                         }
+                        3 => {
+                            let file = 0x101010101010101 << (sq % 8);
 
-                        if SPANS[side][usize::from(sq)] & bbs[side ^ 1][0] == 0 {
-                            pos.active[side].push(Offset::PASSED + fsq);
+                            if file & bbs[side][0] == 0 {
+                                pos.active[side].push(Offset::SEMI_OPEN + (fsq % 8));
+                            }
+
+                            if file & (bbs[0][0] | bbs[1][0]) == 0 {
+                                pos.active[side].push(Offset::FULL_OPEN + (fsq % 8));
+                            }
+
+                            let attacks = (Attacks::rook(usize::from(sq), total_occupancy) & safe).count_ones();
+                            pos.active[side].push(Offset::ROOK_MOBILITY + attacks as u16);
                         }
+                        4 => {
+                            let attacks = (Attacks::queen(usize::from(sq), total_occupancy) & safe).count_ones();
+                            pos.active[side].push(Offset::QUEEN_MOBILITY + attacks as u16);
+                        }
+                        _ => {}
                     }
 
                     bb &= bb - 1;
