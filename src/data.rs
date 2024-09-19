@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use crate::{attacks::Attacks, params::sigmoid, Params, S};
 
-pub const NUM_PARAMS: usize = Offset::QUEEN_MOBILITY as usize + 28;
+pub const NUM_PARAMS: usize = Offset::BISHOP_PAIR as usize + 1;
 pub const TPHASE: f64 = 24.0;
 
 pub struct Offset;
@@ -16,6 +16,7 @@ impl Offset {
     pub const BISHOP_MOBILITY: u16 = Self::KNIGHT_MOBILITY + 9;
     pub const ROOK_MOBILITY: u16 = Self::BISHOP_MOBILITY + 14;
     pub const QUEEN_MOBILITY: u16 = Self::ROOK_MOBILITY + 15;
+    pub const BISHOP_PAIR: u16 = Offset::QUEEN_MOBILITY + 28;
 }
 
 #[derive(Default)]
@@ -105,6 +106,10 @@ impl FromStr for DataPoint {
             let safe = !pawn_threats;
 
             let total_occupancy = occ[0] ^ occ[1];
+
+            if bbs[side][2].count_ones() > 1 {
+                pos.active[side].push(Offset::BISHOP_PAIR);
+            }
 
             for piece in 0..6 {
                 let mut bb = bbs[side][piece];

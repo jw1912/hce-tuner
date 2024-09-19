@@ -107,6 +107,10 @@ impl Tuner {
         println!("static QUEEN_MOBILITY: [S; 28] = [");
         print_pst(Offset::QUEEN_MOBILITY, "    ", 7, 4);
         println!("];");
+
+        println!();
+
+        println!("const BISHOP_PAIR: S = {:?};", self.weights[Offset::BISHOP_PAIR])
     }
 
     pub fn seed_weights(&mut self) {
